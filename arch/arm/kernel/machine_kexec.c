@@ -76,5 +76,5 @@ void machine_kexec(struct kimage *image)
 
 	cpu_proc_fin();
 	setup_mm_for_reboot(0); /* mode is not used, so just pass 0*/
-	cpu_reset(reboot_code_buffer_phys);
+	__virt_to_phys(cpu_reset)(reboot_code_buffer_phys);
 }
