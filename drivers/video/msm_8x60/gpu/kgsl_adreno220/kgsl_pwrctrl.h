@@ -51,6 +51,7 @@
 
 #define KGSL_PWRLEVEL_TURBO 0
 #define KGSL_PWRLEVEL_NOMINAL 1
+#define KGSL_PWRLEVEL_SLEEP 2
 #define KGSL_MAX_CLKS 5
 
 struct platform_device;

@@ -24,6 +24,7 @@
 #include <linux/io.h>
 #include <linux/spinlock.h>
 #include <linux/delay.h>
+#include <linux/clk.h>
 #include <mach/msm_iomap.h>
 #include <mach/clk.h>
 #include <mach/msm_xo.h>
@@ -1134,6 +1135,7 @@ static struct clk_freq_tbl clk_tbl_gfx2d[] = {
 	F_GFX2D(177778000, MM_PLL1,  2,  9, NOMINAL),
 	F_GFX2D(200000000, MM_PLL1,  1,  4, NOMINAL),
 	F_GFX2D(228571000, MM_PLL1,  2,  7, HIGH),
+	F_GFX2D(266667000, MM_PLL1,  2,  7, HIGH),
 	F_END,
 };
 
@@ -1199,6 +1201,7 @@ static struct clk_freq_tbl clk_tbl_gfx3d[] = {
 	F_GFX3D(200000000, MM_PLL1,  1,  4, NOMINAL),
 	F_GFX3D(228571000, MM_PLL1,  2,  7, NOMINAL),
 	F_GFX3D(266667000, MM_PLL1,  1,  3, HIGH),
+	F_GFX3D(300000000, MM_PLL1,  2,  5, HIGH),
 	F_GFX3D(320000000, MM_PLL1,  2,  5, HIGH),
 	F_END,
 };
@@ -2634,7 +2637,25 @@ void msm_clk_soc_set_ignore_list(int *ignore_clk, unsigned num_ignore_clk)
 
 static int msm_clk_soc_late_init(void)
 {
-	return local_unvote_sys_vdd(HIGH);
+	int rc;
+
+	/* Vote for MMFPB to be at least 64MHz when an Apps CPU is active. */
+	struct clk *mmfpb_a_clk = clk_get(NULL, "mmfpb_a_clk");
+	if (WARN(IS_ERR(mmfpb_a_clk), "mmfpb_a_clk not found (%ld)\n",
+			PTR_ERR(mmfpb_a_clk)))
+		return PTR_ERR(mmfpb_a_clk);
+	rc = clk_set_min_rate(mmfpb_a_clk, 64000000);
+	if (WARN(rc, "mmfpb_a_clk rate was not set (%d)\n", rc))
+		return rc;
+	rc = clk_enable(mmfpb_a_clk);
+	if (WARN(rc, "mmfpb_a_clk not enabled (%d)\n", rc))
+		return rc;
+
+	/* Remove temporary vote for HIGH vdd_dig. */
+	rc = local_unvote_sys_vdd(HIGH);
+	WARN(rc, "local_unvote_sys_vdd(HIGH) failed (%d)\n", rc);
+
+	return rc;
 }
 late_initcall(msm_clk_soc_late_init);
 

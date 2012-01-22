@@ -465,7 +465,7 @@ void kgsl_early_suspend_driver(struct early_suspend *h)
 	struct kgsl_device *device = container_of(h,
 					struct kgsl_device, display_off);
 	mutex_lock(&device->mutex);
-	kgsl_pwrctrl_pwrlevel_change(device, KGSL_PWRLEVEL_NOMINAL);
+	kgsl_pwrctrl_pwrlevel_change(device, KGSL_PWRLEVEL_SLEEP);
 	mutex_unlock(&device->mutex);
 }
 EXPORT_SYMBOL(kgsl_early_suspend_driver);
