@@ -330,7 +330,7 @@ static int kgsl_pwrctrl_scaling_governor_store(struct device *dev,
 	mutex_lock(&device->mutex);
 	pwr->idle_pass = reset;
 	if (pwr->idle_pass == 0)
-		kgsl_pwrctrl_pwrlevel_change(device, pwr->thermal_pwrlevel);
+		kgsl_pwrctrl_pwrlevel_change(device, KGSL_PWRLEVEL_TURBO);
 	mutex_unlock(&device->mutex);
 
 	return count;
@@ -888,7 +888,7 @@ void kgsl_pwrctrl_wake(struct kgsl_device *device)
 	if (device->state != KGSL_STATE_NAP) {
 		if (device->pwrctrl.idle_pass)
 			kgsl_pwrctrl_pwrlevel_change(device,
-					device->pwrctrl.thermal_pwrlevel);
+					KGSL_PWRLEVEL_NOMINAL);
 		kgsl_pwrctrl_axi(device, KGSL_PWRFLAGS_AXI_ON);
 	}
 	/* Turn on the core clocks */
