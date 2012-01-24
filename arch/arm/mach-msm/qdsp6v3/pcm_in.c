@@ -38,6 +38,10 @@
 
 #define VOC_REC_NONE 0xFF
 
+#define AUDIO_GET_VOICE_STATE   _IOR(AUDIO_IOCTL_MAGIC, 55, unsigned)
+#define AUDIO_GET_DEV_DRV_VER	_IOR(AUDIO_IOCTL_MAGIC, 56, unsigned)
+#define DEV_DRV_VER		(8260 << 16 | 1)
+
 struct pcm {
 	struct mutex lock;
 	struct mutex read_lock;
@@ -149,6 +153,18 @@ static long pcm_in_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		struct msm_audio_stats stats;
 		memset(&stats, 0, sizeof(stats));
 		if (copy_to_user((void *) arg, &stats, sizeof(stats)))
+			rc = -EFAULT;
+		break;
+	}
+	case AUDIO_GET_VOICE_STATE: {
+		int state = 1; // msm_get_voice_state();
+		if (copy_to_user((void *) arg, &state, sizeof(state)))
+			rc = -EFAULT;
+		break;
+	}
+	case AUDIO_GET_DEV_DRV_VER: {
+		unsigned int vers = DEV_DRV_VER;
+		if (copy_to_user((void *) arg, &vers, sizeof(vers)))
 			rc = -EFAULT;
 		break;
 	}
