@@ -57,6 +57,7 @@
 #define MAX_VDD_SC		1600000 /* uV */
 #define MIN_VDD_SC		 800000 /* uV */
 #define MAX_AXI			 310500 /* KHz */
+#define BOOT_KHZ		1512000 /* KHz */
 #define SCPLL_LOW_VDD_FMAX	 594000 /* KHz */
 #define SCPLL_LOW_VDD		1000000 /* uV */
 #define SCPLL_NOMINAL_VDD	1100000 /* uV */
@@ -168,7 +169,6 @@ static struct msm_bus_paths bw_level_tbl[] = {
 	[1] = BW_MBPS(1336), /* At least 167 MHz on bus. */
 	[2] = BW_MBPS(2008), /* At least 251 MHz on bus. */
 	[3] = BW_MBPS(2480), /* At least 310 MHz on bus. */
-	[4] = BW_MBPS(3200), /* At least 360 MHz on bus. */
 };
 
 static struct msm_bus_scale_pdata bus_client_pdata = {
@@ -199,9 +199,9 @@ static struct clkctl_l2_speed l2_freq_tbl_v2[] = {
 	[14] = {1134000,  1, 0x15, 1100000, 1200000, 2},
 	[15] = {1188000,  1, 0x16, 1200000, 1200000, 3},
 	[16] = {1404000,  1, 0x1A, 1200000, 1250000, 3},
-	[17] = {1458000, 1, 0x1A, 1225000, 1275000, 4},
-	[18] = {1512000, 1, 0x1A, 1250000, 1300000, 4},
-	[19] = {1566000, 1, 0x1A, 1275000, 1350000, 4},
+	[17] = {1458000, 1, 0x1A, 1225000, 1275000, 3},
+	[18] = {1512000, 1, 0x1A, 1250000, 1300000, 3},
+	[19] = {1566000, 1, 0x1A, 1275000, 1350000, 3},
 };
 
 #define L2(x) (&l2_freq_tbl_v2[(x)])
@@ -904,7 +904,7 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 
 	/* Improve boot time by ramping up CPUs immediately. */
 	for_each_online_cpu(cpu)
-		acpuclk_set_rate(cpu, max_cpu_khz, SETRATE_INIT);
+		acpuclk_set_rate(cpu, BOOT_KHZ, SETRATE_INIT);
 
 	cpufreq_table_init();
 	register_hotcpu_notifier(&acpuclock_cpu_notifier);
