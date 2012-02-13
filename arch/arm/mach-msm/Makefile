@@ -22,7 +22,7 @@ obj-$(CONFIG_ARCH_MSM7X30) += clock-7x30.o arch-init-7x30.o socinfo.o
 obj-$(CONFIG_ARCH_MSM7X30) += spm.o
 
 ifdef CONFIG_ARCH_MSM8X60
-obj-$(CONFIG_CPU_V7) += idle-v7-8x60.o msm_fault_handlers.o
+obj-$(CONFIG_CPU_V7) += idle-v7.o msm_fault_handlers.o
 else
 obj-$(CONFIG_CPU_V7) += idle-v7.o msm_fault_handlers.o
 endif
