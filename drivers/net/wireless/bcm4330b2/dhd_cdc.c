@@ -2752,7 +2752,6 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 	int arp_ol = 0xf;
 	int scan_assoc_time = 40;
 	int scan_unassoc_time = 80;
-	int scan_passive_time = 100;
 	uint32 listen_interval = LISTEN_INTERVAL; /* Default Listen Interval in Beacons */ 
 #if defined(SOFTAP)
 	uint dtim = 1;
@@ -2917,8 +2916,6 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 		sizeof(scan_assoc_time), TRUE, 0);
 	dhd_wl_ioctl_cmd(dhd, WLC_SET_SCAN_UNASSOC_TIME, (char *)&scan_unassoc_time,
 		sizeof(scan_unassoc_time), TRUE, 0);
-	dhd_wl_ioctl_cmd(dhd, WLC_SET_SCAN_PASSIVE_TIME, (char *)&scan_passive_time,
-		sizeof(scan_passive_time), TRUE, 0);
 
 	/* Set ARP offload */
 	bcm_mkiovar("arpoe", (char *)&arpoe, 4, iovbuf, sizeof(iovbuf));

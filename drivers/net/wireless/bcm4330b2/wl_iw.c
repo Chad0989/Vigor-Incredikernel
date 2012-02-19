@@ -249,8 +249,6 @@ extern int dhd_wait_pend8021x(struct net_device *dev);
 #define IW_EVENT_IDX(cmd)	((cmd) - IWEVFIRST)
 #endif 
 
-#define HOTSPOT_MAX_STATIONS 10
-
 static void *g_scan = NULL;
 static volatile uint g_scan_specified_ssid;	
 static wlc_ssid_t g_specific_ssid;		
@@ -2725,8 +2723,7 @@ iwpriv_set_ap_config(struct net_device *dev,
 		}
 
 		extra[wrqu->data.length] = 0;
-		/* WL_SOFTAP((" Got str param in iw_point: %s\n", extra)); */
-		WL_SOFTAP((" Got str param in iw_point\n"));
+		WL_SOFTAP((" Got str param in iw_point: %s\n", extra));
 
 		memset(ap_cfg, 0, sizeof(struct ap_profile));
 
@@ -2779,7 +2776,7 @@ static int iwpriv_get_assoc_list(struct net_device *dev,
 
 	memset(sta_maclist, 0, sizeof(mac_buf));
 
-	sta_maclist->count = HOTSPOT_MAX_STATIONS;
+	sta_maclist->count = 8;
 
 	WL_TRACE((" net device:%s, buf_sz:%d\n", dev->name, sizeof(mac_buf)));
 	get_assoc_sta_list(dev, mac_buf, 256);
@@ -4427,7 +4424,6 @@ wl_iw_iscan_set_scan_broadcast_prep(struct net_device *dev, uint flag)
 {
 	wlc_ssid_t ssid;
 	iscan_info_t *iscan = g_iscan;
-	uint band;
 
 	if (dev_wlc_ioctl_off) {
 		WL_ERROR(("%s: wl driver going down!\n", __FUNCTION__));
@@ -4439,9 +4435,6 @@ wl_iw_iscan_set_scan_broadcast_prep(struct net_device *dev, uint flag)
 	if (g_first_broadcast_scan == BROADCAST_SCAN_FIRST_IDLE) {
 		g_first_broadcast_scan = BROADCAST_SCAN_FIRST_STARTED;
 		WL_TRACE(("%s: First Brodcast scan was forced\n", __FUNCTION__));
-
-		band = WLC_BAND_2G;
-		dev_wlc_ioctl(dev, WLC_SET_BAND, &band, sizeof(band));
 	}
 	else if (g_first_broadcast_scan == BROADCAST_SCAN_FIRST_STARTED) {
 		WL_TRACE(("%s: ignore ISCAN request first BS is not done yet\n", __FUNCTION__));
@@ -5081,7 +5074,6 @@ wl_iw_iscan_get_scan(
 	iscan_buf_t * p_buf;
 	uint32  counter = 0;
 	uint8   channel;
-	uint band;
 #if !defined(CSCAN)
 	__u16 merged_len = 0;
 	uint buflen_from_user = dwrq->length;
@@ -5263,10 +5255,6 @@ wl_iw_iscan_get_scan(
 #endif 
 	
 #if defined(CONFIG_FIRST_SCAN)
-	if (g_first_broadcast_scan < BROADCAST_SCAN_FIRST_RESULT_CONSUMED) {
-		band = WLC_BAND_AUTO;
-		dev_wlc_ioctl(dev, WLC_SET_BAND, &band, sizeof(band));
-	}
 	g_first_broadcast_scan = BROADCAST_SCAN_FIRST_RESULT_CONSUMED;
 #endif 
 
@@ -7074,7 +7062,6 @@ wl_iw_set_cscan(
 	char type;
 	char *str_ptr;
 	int tlv_size_left;
-	uint band;
 #ifdef TLV_DEBUG
 	int i;
 	char tlv_in_example[] = {
@@ -7237,9 +7224,6 @@ wl_iw_set_cscan(
 				WL_ERROR(("%s Clean up First scan flag which is %d\n",
 					__FUNCTION__, g_first_broadcast_scan));
 				g_first_broadcast_scan = BROADCAST_SCAN_FIRST_RESULT_CONSUMED;
-
-				band = WLC_BAND_AUTO;
-				dev_wlc_ioctl(dev, WLC_SET_BAND, &band, sizeof(band));
 			}
 			else {
 				WL_ERROR(("%s Ignoring CSCAN : First Scan is not done yet %d\n",
@@ -7489,7 +7473,7 @@ set_ap_cfg(struct net_device *dev, struct ap_profile *ap)
 	int channel = 0;
 
 	wlc_ssid_t ap_ssid;
-	int max_assoc = HOTSPOT_MAX_STATIONS;
+	int max_assoc = 8;
 
 	int res = 0;
 	int apsta_var = 0;
@@ -7517,9 +7501,8 @@ set_ap_cfg(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
-	/* if (ap->key[0] != '\0')
-	 *	WL_SOFTAP(("	key = '%s'\n", ap->key));
-	 */
+	if (ap->key[0] != '\0')
+		WL_SOFTAP(("	key = '%s'\n", ap->key));
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 	WL_SOFTAP(("	hidden = %d\n", ap->closednet));
@@ -7767,9 +7750,8 @@ wl_iw_set_ap_security(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
-	/* if (ap->key[0] != '\0')
-	 *	WL_SOFTAP(("	key = '%s'\n", ap->key));
-	 */
+	if (ap->key[0] != '\0')
+		WL_SOFTAP(("	key = '%s'\n", ap->key));
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 
@@ -7997,8 +7979,7 @@ get_parameter_from_string(
 				
 				memcpy(dst, param_str_begin, parm_str_len);
 				*((char *)dst + parm_str_len) = 0; 
-				/* WL_DEFAULT((" written as a string:%s\n", (char *)dst)); */
-				WL_DEFAULT((" written as a string\n"));
+				WL_DEFAULT((" written as a string:%s\n", (char *)dst));
 			break;
 
 		}
@@ -8031,7 +8012,7 @@ static int wl_iw_softap_deassoc_stations(struct net_device *dev, u8 *mac)
 	}
 
 	memset(assoc_maclist, 0, sizeof(mac_buf));
-	assoc_maclist->count = HOTSPOT_MAX_STATIONS;
+	assoc_maclist->count = 8; 
 
 	res = dev_wlc_ioctl(dev, WLC_GET_ASSOCLIST, assoc_maclist, 128);
 	if (res != 0) {
@@ -8346,7 +8327,7 @@ get_assoc_sta_list(struct net_device *dev, char *buf, int len)
 	WL_TRACE(("%s: dev_wlc_ioctl(dev:%p, cmd:%d, buf:%p, len:%d)\n",
 		__FUNCTION__, dev, WLC_GET_ASSOCLIST, buf, len));
 
-	maclist->count = HOTSPOT_MAX_STATIONS;
+	maclist->count = 8;
 	ret = dev_wlc_ioctl(dev, WLC_GET_ASSOCLIST, buf, len);
 
 	if (ret != 0) {
@@ -8511,7 +8492,7 @@ static int set_ap_mac_list(struct net_device *dev, char *buf)
 				ap_black_list.ea[i].octet[3], ap_black_list.ea[i].octet[4], ap_black_list.ea[i].octet[5]));
 
 		/* deauth if there is associated station not in list */
-		assoc_maclist->count = HOTSPOT_MAX_STATIONS;
+		assoc_maclist->count = 8;
 		dev_wlc_ioctl(dev, WLC_GET_ASSOCLIST, assoc_maclist, 256);
 		if (assoc_maclist->count) {
 			int j;
@@ -8583,7 +8564,7 @@ set_ap_mac_list(struct net_device *dev, void *buf)
 				maclist->ea[i].octet[5]));
 
 		
-		assoc_maclist->count = HOTSPOT_MAX_STATIONS;
+		assoc_maclist->count = 8;
 		ioc_res = dev_wlc_ioctl(dev, WLC_GET_ASSOCLIST, assoc_maclist, 256);
 		check_error(ioc_res, "ioctl ERROR:", __FUNCTION__, __LINE__);
 		WL_SOFTAP((" Cur assoc clients:%d\n", assoc_maclist->count));

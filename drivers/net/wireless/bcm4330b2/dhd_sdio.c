@@ -1390,6 +1390,8 @@ dhd_bus_txctl(struct dhd_bus *bus, uchar *msg, uint msglen)
 			ret = 0;
 		} else {
 			DHD_ERROR(("%s: ctrl_frame_stat == TRUE\n", __FUNCTION__));
+			DHD_ERROR(("%s:  bus->tx_max %d, bus->tx_seq %d\n",
+				__func__, bus->tx_max, bus->tx_seq));
 			ret = -1;
 			bus->ctrl_frame_stat = FALSE;
 			goto done;
@@ -1414,6 +1416,8 @@ dhd_bus_txctl(struct dhd_bus *bus, uchar *msg, uint msglen)
 			/* On failure, abort the command and terminate the frame */
 				DHD_INFO(("%s: sdio error %d, abort command and terminate frame.\n",
 				          __FUNCTION__, ret));
+				DHD_ERROR(("%s:dhd_bcmsdh_send_buf error retries:%d, bus->tx_max %d, bus->tx_seq %d\n",
+					__func__, retries, bus->tx_max, bus->tx_seq));
 				bus->tx_sderrs++;
 
 				bcmsdh_abort(sdh, SDIO_FUNC_2);
@@ -1456,12 +1460,6 @@ done:
 	return ret ? -EIO : 0;
 }
 
-#define WL_PROTECT 1
-
-#ifdef WL_PROTECT
-static int timeout_count;
-#endif
-
 int
 dhd_bus_rxctl(struct dhd_bus *bus, uchar *msg, uint msglen)
 {
@@ -1493,10 +1491,6 @@ dhd_bus_rxctl(struct dhd_bus *bus, uchar *msg, uint msglen)
 		dhdsdio_checkdied(bus, NULL, 0);
 		dhd_os_sdunlock(bus->dhd);
 #endif /* DHD_DEBUG */
-#ifdef WL_PROTECT
-		timeout_count++;
-		DHD_ERROR(("timeout_count = %d\n", timeout_count));
-#endif
 	} else if (pending == TRUE) {
 		DHD_CTL(("%s: canceled\n", __FUNCTION__));
 		return -ERESTARTSYS;
@@ -1513,16 +1507,6 @@ dhd_bus_rxctl(struct dhd_bus *bus, uchar *msg, uint msglen)
 		bus->dhd->rx_ctlpkts++;
 	else
 		bus->dhd->rx_ctlerrs++;
-
-#ifdef WL_PROTECT
-	if (rxlen)
-		timeout_count = 0;
-	if (timeout_count == 2) {
-		timeout_count = 0;
-		bus->dhd->busstate = DHD_BUS_DOWN;
-		DHD_ERROR(("bring bus down!\n"));
-	}
-#endif
 
 	return rxlen ? (int)rxlen : -ETIMEDOUT;
 }
