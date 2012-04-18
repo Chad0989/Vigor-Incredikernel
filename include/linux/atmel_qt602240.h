@@ -2,6 +2,10 @@
 #define _LINUX_ATMEL_H
 
 #include <linux/bitops.h>
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_SWEEP2WAKE
+#include <linux/input.h>
+#include <linux/leds-pm8058.h>
+#endif
 
 #define ATMEL_QT602240_NAME "atmel_qt602240"
 #define ATMEL_MXT224E_NAME "atmel_mxt224e"
@@ -150,9 +154,9 @@
 #define T9_CFG_YEDGEDIST                        29
 #define T9_CFG_JUMPLIMIT                        30
 #define T9_CFG_TCHHYST                          31 /* FW v2.x */
-#define T9_CFG_XPITCH				32 /* 224E */
-#define T9_CFG_YPITCH				33
-#define T9_CFG_NEXTTCHDI			34
+#define T9_CFG_XPITCH							32 /* 224E */
+#define T9_CFG_YPITCH							33
+#define T9_CFG_NEXTTCHDI						34
 
 #define T9_MSG_STATUS                           1
 #define T9_MSG_XPOSMSB                          2
@@ -313,7 +317,7 @@
 #define T48_MSG_STATUS_APXCHG                   BIT(1)
 #define T48_MSG_STATUS_ALGOERR                  BIT(2)
 #define T48_MSG_STATUS_STATCHG                  BIT(4)
-#define T48_MSG_STATUS_NLVLCGH			BIT(5)
+#define T48_MSG_STATUS_NLVLCGH					BIT(5)
 
 #define T48_MSG_STATE_OFF                       0
 #define T48_MSG_STATE_SEARCH                    1
@@ -338,11 +342,11 @@
 #define T46_MSG_STATUS                          1
 
 /* 224E 1.1.0.1 */
-#define T35_CFG_MAXTCHTHR			0
-#define T35_CFG_MAXNLTHR			1
-#define T35_CFG_MAXDI				2
-#define T35_CFG_MAXFILTER			3
-#define T35_CFG_THRCHTHR			4
+#define T35_CFG_MAXTCHTHR						0
+#define T35_CFG_MAXNLTHR						1
+#define T35_CFG_MAXDI							2
+#define T35_CFG_MAXFILTER						3
+#define T35_CFG_THRCHTHR						4
 
 /* cable_config[] of atmel_i2c_platform_data */
 /* config[] of atmel_config_data */
@@ -449,6 +453,7 @@ struct atmel_i2c_platform_data {
 	int8_t wlc_config[7];
 	uint8_t wlc_freq[5];
 	int8_t noise_config[3];
+	uint8_t cal_tchthr[2];
 	uint8_t call_tchthr[2];
 	uint8_t locking_config[1];
 	uint16_t filter_level[4];
@@ -470,6 +475,12 @@ struct atmel_config_data {
 	int8_t *config_T48;
 	int8_t *config_T55;
 };
+
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_SWEEP2WAKE
+/* Sweep2Wake */
+extern void sweep2wake_setdev(struct input_dev * input_device);
+extern void sweep2wake_setleddev(struct led_classdev * led_dev);
+#endif
 
 #endif
 

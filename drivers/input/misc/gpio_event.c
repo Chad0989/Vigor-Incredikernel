@@ -20,6 +20,9 @@
 #include <linux/hrtimer.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_SWEEP2WAKE
+#include <linux/atmel_qt602240.h>
+#endif
 
 static unsigned char fm_radio_status;
 
@@ -256,6 +259,12 @@ static int gpio_event_probe(struct platform_device *pdev)
 					event_info->name : event_info->names[i];
 		input_dev->event = gpio_input_event;
 		ip->input_devs->dev[i] = input_dev;
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_SWEEP2WAKE
+		if (!strcmp(input_dev->name, "vigor-keypad")) {
+			sweep2wake_setdev(input_dev);
+			printk(KERN_INFO "[sweep2wake]: set device %s\n", input_dev->name);
+		}
+#endif
 	}
 	ip->input_devs->count = dev_count;
 	ip->info = event_info;
